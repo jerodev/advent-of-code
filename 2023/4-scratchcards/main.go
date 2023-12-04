@@ -14,8 +14,25 @@ func main() {
 
 	b := make([]byte, 1)
 	var points float64 = 0
+	cards := []int{}
+	cardNumber := 0
 	line := ""
 
+	// Count the rows
+	for {
+		_, err := file.Read(b)
+		if b[0] == '\n' || err == io.EOF {
+			cards = append(cards, 1)
+
+			if err == io.EOF {
+				break
+			}
+		}
+	}
+	totalCardCount := len(cards)
+
+	_ = file.Close()
+	file = util.FileFromArgs()
 	for {
 		_, err := file.Read(b)
 		if b[0] == '\n' || err == io.EOF {
@@ -28,6 +45,15 @@ func main() {
 			score := len(intersectSlice(winners, numbers))
 			if score > 0 {
 				points += math.Pow(2, float64(score)-1)
+
+				for n := 0; n < cards[cardNumber]; n++ {
+					for i := 1; i <= score; i++ {
+						if cardNumber+i < len(cards) {
+							cards[cardNumber+i]++
+							totalCardCount++
+						}
+					}
+				}
 			}
 
 			if err == io.EOF {
@@ -35,12 +61,14 @@ func main() {
 			}
 
 			line = ""
+			cardNumber++
 		}
 
 		line += string(b[0])
 	}
 
 	fmt.Println(points)
+	fmt.Println(totalCardCount)
 }
 
 // intersectSlice returns a slice with elements that exist in both arrays
@@ -61,8 +89,6 @@ func intersectSlice(a, b []string) []string {
 			}
 		}
 	}
-
-	fmt.Println(a, b, result)
 
 	return result
 }
