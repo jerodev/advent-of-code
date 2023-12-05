@@ -4,6 +4,7 @@ import (
 	"advent-of-code/util"
 	"fmt"
 	"io"
+	"math"
 	"strings"
 )
 
@@ -90,22 +91,24 @@ func main() {
 	lowestSeedNumberFromRange := -1
 	seedPair := chunkSlice(seeds)
 
+	jobs := make(chan []int, len(seedPair))
+	results := make(chan int, len(seedPair))
+
+	numberOfWorkers := math.Min(float64(len(seedPair)), 12)
+	for i := 0; i < int(numberOfWorkers); i++ {
+		go findSeedLocationWorker(maps, jobs, results)
+	}
+
 	for _, seed := range seedPair {
-		for r := 0; r < seed[1]; r++ {
-			x := seed[0] + r
-			for i := 0; i < len(maps); i++ {
-				for _, mapping := range maps[i] {
-					if x >= mapping.SourceStart && x < mapping.SourceStart+mapping.Length {
-						x = mapping.DestinationStart + (x - mapping.SourceStart)
-						break
-					}
-				}
+		jobs <- seed
+	}
+	close(jobs)
 
-			}
-
-			if lowestSeedNumberFromRange == -1 || x < lowestSeedNumberFromRange {
-				lowestSeedNumberFromRange = x
-			}
+	var x int
+	for a := 0; a < len(seedPair); a++ {
+		x = <-results
+		if lowestSeedNumberFromRange == -1 || x < lowestSeedNumberFromRange {
+			lowestSeedNumberFromRange = x
 		}
 	}
 
@@ -120,4 +123,28 @@ func chunkSlice(slice []int) [][]int {
 	}
 
 	return chunks
+}
+
+func findSeedLocationWorker(maps [7][]mapping, seeds <-chan []int, location chan<- int) {
+	for seed := range seeds {
+		lowest := -1
+
+		for r := 0; r < seed[1]; r++ {
+			x := seed[0] + r
+			for i := 0; i < len(maps); i++ {
+				for _, mapping := range maps[i] {
+					if x >= mapping.SourceStart && x < mapping.SourceStart+mapping.Length {
+						x = mapping.DestinationStart + (x - mapping.SourceStart)
+						break
+					}
+				}
+			}
+
+			if lowest == -1 || x < lowest {
+				lowest = x
+			}
+		}
+
+		location <- lowest
+	}
 }
