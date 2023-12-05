@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"slices"
 	"strings"
 )
 
@@ -44,6 +45,9 @@ func main() {
 
 			if strings.TrimSpace(line) != "" {
 				if strings.HasSuffix(line, "map:") {
+					if mapPointer > -1 {
+						maps[mapPointer] = fillEmptySpace(maps[mapPointer])
+					}
 					mapPointer++
 					line = ""
 					continue
@@ -125,26 +129,72 @@ func chunkSlice(slice []int) [][]int {
 	return chunks
 }
 
+func fillEmptySpace(mapp []mapping) []mapping {
+	slices.SortFunc(mapp, func(a, b mapping) int {
+		return a.SourceStart - b.SourceStart
+	})
+
+	newMap := []mapping{}
+	start := 0
+	for _, rng := range mapp {
+		if rng.SourceStart > start {
+			newMap = append(newMap, mapping{
+				SourceStart:      start,
+				DestinationStart: start,
+				Length:           rng.SourceStart - start,
+			})
+		}
+
+		newMap = append(newMap, rng)
+
+		start = rng.SourceStart + rng.Length
+	}
+
+	return newMap
+}
+
 func findSeedLocationWorker(maps [7][]mapping, seeds <-chan []int, location chan<- int) {
 	for seed := range seeds {
 		lowest := -1
 
-		for r := 0; r < seed[1]; r++ {
-			x := seed[0] + r
-			for i := 0; i < len(maps); i++ {
-				for _, mapping := range maps[i] {
-					if x >= mapping.SourceStart && x < mapping.SourceStart+mapping.Length {
-						x = mapping.DestinationStart + (x - mapping.SourceStart)
-						break
-					}
-				}
+		remaining := seed[1]
+		start := seed[0]
+		for {
+			if remaining <= 0 {
+				break
 			}
 
-			if lowest == -1 || x < lowest {
-				lowest = x
+			startLocation, consumed := walk(start, remaining, 0, maps)
+			remaining -= consumed
+			start += consumed
+			if lowest == -1 || startLocation < lowest {
+				lowest = startLocation
 			}
 		}
 
 		location <- lowest
 	}
+}
+
+func walk(value int, rng int, mapIndex int, maps [7][]mapping) (int, int) {
+	if mapIndex >= len(maps) {
+		return value, rng
+	}
+
+	mapp := maps[mapIndex]
+	var rangeItem *mapping = nil
+	for _, item := range mapp {
+		if value >= item.SourceStart && value < item.SourceStart+item.Length {
+			rangeItem = &item
+			break
+		}
+	}
+
+	if rangeItem != nil {
+		diff := value - rangeItem.SourceStart
+		newValue := rangeItem.DestinationStart + diff
+		return walk(newValue, int(math.Min(float64(rng), float64(rangeItem.Length-diff))), mapIndex+1, maps)
+	}
+
+	return walk(value, 1, mapIndex+1, maps)
 }
