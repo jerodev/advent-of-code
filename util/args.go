@@ -1,12 +1,11 @@
 package util
 
 import (
-	"io"
 	"os"
 )
 
 // FileFromArgs returns a file reader based on the first command line argument
-func FileFromArgs() io.ReadCloser {
+func FileFromArgs() *os.File {
 	file := os.Args[1]
 
 	f, err := os.Open(file)
@@ -15,4 +14,16 @@ func FileFromArgs() io.ReadCloser {
 	}
 
 	return f
+}
+
+// ReadFileFromArgs returns all file content as a string
+func ReadFileFromArgs() string {
+	file := os.Args[1]
+
+	f, err := os.ReadFile(file)
+	if err != nil {
+		panic(err)
+	}
+
+	return string(f)
 }
