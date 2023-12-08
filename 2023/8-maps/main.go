@@ -64,8 +64,24 @@ func main() {
 		}
 	}
 
+	fmt.Println(solve(locations["AAA"], locations, directions))
+
+	// Part two, calculate LCM for the first of each result
+	lcmSteps := -1
+	for _, loc := range startLocations {
+		steps := solve2(loc, locations, directions)
+		if lcmSteps == -1 {
+			lcmSteps = steps
+		} else {
+			lcmSteps = lcm(lcmSteps, steps)
+		}
+	}
+
+	fmt.Println(lcmSteps)
+}
+
+func solve(position *location, locations map[string]*location, directions string) int {
 	// Loop and loop and loop untill we find ZZZ
-	position := locations["AAA"]
 	steps := 0
 outer:
 	for {
@@ -83,34 +99,38 @@ outer:
 		}
 	}
 
-	fmt.Println(steps)
+	return steps
+}
 
-	// Part two, loop for all start locations
-	steps = 0
-outer2:
+func solve2(position *location, locations map[string]*location, directions string) int {
+	// Loop and loop and loop untill we find **Z
+	steps := 0
+outer:
 	for {
 		for _, LR := range directions {
-			allZ := true
-			for i, loc := range startLocations {
-				if LR == 'L' {
-					startLocations[i] = loc.Left
-				} else {
-					startLocations[i] = loc.Right
-				}
-
-				if startLocations[i].Name[2] != 'Z' {
-					allZ = false
-
-				}
+			if LR == 'L' {
+				position = position.Left
+			} else {
+				position = position.Right
 			}
-
 			steps++
 
-			if allZ {
-				break outer2
+			if position.Name[2] == 'Z' {
+				break outer
 			}
 		}
 	}
 
-	fmt.Println(steps)
+	return steps
+}
+
+func lcm(a, b int) int {
+	return a * b / gcd(a, b)
+}
+
+func gcd(a, b int) int {
+	for b != 0 {
+		a, b = b, a%b
+	}
+	return a
 }
