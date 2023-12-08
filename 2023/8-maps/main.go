@@ -20,6 +20,7 @@ func main() {
 	directions := ""
 	locationLines := []string{}
 	locations := map[string]*location{}
+	startLocations := []*location{}
 
 	for {
 		_, err := file.Read(b)
@@ -57,6 +58,10 @@ func main() {
 		location := locations[line[:3]]
 		location.Left = locations[line[7:10]]
 		location.Right = locations[line[12:15]]
+
+		if line[2] == 'A' {
+			startLocations = append(startLocations, location)
+		}
 	}
 
 	// Loop and loop and loop untill we find ZZZ
@@ -74,6 +79,35 @@ outer:
 
 			if position.Name == "ZZZ" {
 				break outer
+			}
+		}
+	}
+
+	fmt.Println(steps)
+
+	// Part two, loop for all start locations
+	steps = 0
+outer2:
+	for {
+		for _, LR := range directions {
+			allZ := true
+			for i, loc := range startLocations {
+				if LR == 'L' {
+					startLocations[i] = loc.Left
+				} else {
+					startLocations[i] = loc.Right
+				}
+
+				if startLocations[i].Name[2] != 'Z' {
+					allZ = false
+
+				}
+			}
+
+			steps++
+
+			if allZ {
+				break outer2
 			}
 		}
 	}
