@@ -15,3 +15,13 @@ func StringToInts(s, delimiter string) []int {
 
 	return ints
 }
+
+func IntsToStrings(ints []int) []string {
+	strings := make([]string, len(ints))
+
+	for i := range ints {
+		strings[i] = strconv.Itoa(ints[i])
+	}
+
+	return strings
+}
