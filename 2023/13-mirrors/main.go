@@ -33,17 +33,20 @@ func main() {
 
 			if (line == "" || err == io.EOF) && len(rows) > 0 {
 				// Part 1
-				result += findMirrors(rows) * 100
-				result += findMirrors(columns)
+				m := findMirrors(rows, 0)
+				if m > 0 {
+					result += m * 100
+				} else {
+					result += findMirrors(columns, 0)
+				}
 
 				// Part 2
-				m := findMirrorsWithSmudges(rows)
+				m = findMirrors(rows, 1)
 				if m > 0 {
 					resultPart2 += m * 100
 				} else {
-					resultPart2 += findMirrorsWithSmudges(columns)
+					resultPart2 += findMirrors(columns, 1)
 				}
-				fmt.Println(resultPart2)
 
 				rows = []string{}
 				columns = []string{}
@@ -72,23 +75,27 @@ func main() {
 	fmt.Println(resultPart2)
 }
 
-func findMirrors(rows []string) int {
+func findMirrors(rows []string, smudgeCount int) int {
 	lastIndex := len(rows) - 1
 
 	for i := 1; i <= lastIndex; i++ {
 		di := i
+		smudges := smudgeCount
 		isMirror := true
 		for j := i - 1; j >= 0 && di <= lastIndex; j-- {
 			if rows[j] != rows[di] {
-				isMirror = false
-				break
+				if smudges > 0 && countStringDiff(rows[j], rows[di]) == 1 {
+					smudges--
+				} else {
+					isMirror = false
+					break
+				}
 			}
 
 			di++
 		}
 
-		if isMirror {
-			fmt.Println(rows, i)
+		if isMirror && smudges == 0 {
 			return i
 		}
 	}
@@ -96,48 +103,14 @@ func findMirrors(rows []string) int {
 	return 0
 }
 
-func findMirrorsWithSmudges(rows []string) int {
-	lastIndex := len(rows) - 1
+func countStringDiff(a, b string) int {
+	diff := 0
 
-	smallest := 0
-
-	for x := range rows {
-		for y := range rows[x] {
-			if rows[x][y] == ASH {
-				rows[x] = rows[x][:y] + string(ROCK) + rows[x][y+1:]
-			} else {
-				rows[x] = rows[x][:y] + string(ASH) + rows[x][y+1:]
-			}
-
-			for i := 1; i <= lastIndex; i++ {
-				di := i
-				isMirror := true
-				for j := i - 1; j >= 0 && di <= lastIndex; j-- {
-					if rows[j] != rows[di] {
-						isMirror = false
-						break
-					}
-
-					di++
-				}
-
-				if isMirror {
-					if smallest == 0 || i < smallest {
-						smallest = i
-					}
-
-					break
-				}
-			}
-
-			// Clean back up
-			if rows[x][y] == ASH {
-				rows[x] = rows[x][:y] + string(ROCK) + rows[x][y+1:]
-			} else {
-				rows[x] = rows[x][:y] + string(ASH) + rows[x][y+1:]
-			}
+	for i := 0; i < len(a); i++ {
+		if a[i] != b[i] {
+			diff++
 		}
 	}
 
-	return smallest
+	return diff
 }
