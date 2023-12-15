@@ -9,4 +9,6 @@ func PrintMatrix(matrix [][]byte) {
 		}
 		fmt.Println()
 	}
+
+	fmt.Println()
 }
