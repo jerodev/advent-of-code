@@ -50,8 +50,10 @@ func main() {
 		})
 	}
 
-	grid = bounce(grid, 0, -1, 'R')
-	fmt.Println(calculateEnergy(grid))
+	// Part 1
+	fmt.Println(calculateEnergy(bounce(grid, 0, -1, 'R')))
+
+	// Part 2
 }
 
 func bounce(grid [][]tile, y, x int, direction byte) [][]tile {
@@ -94,22 +96,22 @@ func bounce(grid [][]tile, y, x int, direction byte) [][]tile {
 		tmp := string(direction)
 		switch direction {
 		case 'R':
-			if strings.Contains(grid[y][x].EntryHistory, "D") || strings.Contains(grid[y][x].EntryHistory, "R") { // Been there, done that
+			if strings.Contains(grid[y][x].EntryHistory, "U") || strings.Contains(grid[y][x].EntryHistory, "R") { // Been there, done that
 				return grid
 			}
 			direction = 'D'
 		case 'L':
-			if strings.Contains(grid[y][x].EntryHistory, "U") || strings.Contains(grid[y][x].EntryHistory, "L") {
+			if strings.Contains(grid[y][x].EntryHistory, "D") || strings.Contains(grid[y][x].EntryHistory, "L") {
 				return grid
 			}
 			direction = 'U'
 		case 'U':
-			if strings.Contains(grid[y][x].EntryHistory, "U") || strings.Contains(grid[y][x].EntryHistory, "L") {
+			if strings.Contains(grid[y][x].EntryHistory, "U") || strings.Contains(grid[y][x].EntryHistory, "R") {
 				return grid
 			}
 			direction = 'L'
 		case 'D':
-			if strings.Contains(grid[y][x].EntryHistory, "D") || strings.Contains(grid[y][x].EntryHistory, "R") {
+			if strings.Contains(grid[y][x].EntryHistory, "D") || strings.Contains(grid[y][x].EntryHistory, "L") {
 				return grid
 			}
 			direction = 'R'
@@ -122,22 +124,22 @@ func bounce(grid [][]tile, y, x int, direction byte) [][]tile {
 		tmp := string(direction)
 		switch direction {
 		case 'R':
-			if strings.Contains(grid[y][x].EntryHistory, "U") || strings.Contains(grid[y][x].EntryHistory, "R") { // Been there, done that
+			if strings.Contains(grid[y][x].EntryHistory, "D") || strings.Contains(grid[y][x].EntryHistory, "R") { // Been there, done that
 				return grid
 			}
 			direction = 'U'
 		case 'L':
-			if strings.Contains(grid[y][x].EntryHistory, "L") || strings.Contains(grid[y][x].EntryHistory, "D") {
+			if strings.Contains(grid[y][x].EntryHistory, "L") || strings.Contains(grid[y][x].EntryHistory, "U") {
 				return grid
 			}
 			direction = 'D'
 		case 'U':
-			if strings.Contains(grid[y][x].EntryHistory, "U") || strings.Contains(grid[y][x].EntryHistory, "R") {
+			if strings.Contains(grid[y][x].EntryHistory, "U") || strings.Contains(grid[y][x].EntryHistory, "L") {
 				return grid
 			}
 			direction = 'R'
 		case 'D':
-			if strings.Contains(grid[y][x].EntryHistory, "L") || strings.Contains(grid[y][x].EntryHistory, "D") {
+			if strings.Contains(grid[y][x].EntryHistory, "R") || strings.Contains(grid[y][x].EntryHistory, "D") {
 				return grid
 			}
 			direction = 'L'
@@ -151,7 +153,7 @@ func bounce(grid [][]tile, y, x int, direction byte) [][]tile {
 	// Split if we hit a splitter in the middle
 	if grid[y][x].Value == TILE_SPLIT_H {
 		if direction == 'U' || direction == 'D' {
-			if strings.Contains(grid[y][x].EntryHistory, "U") || strings.Contains(grid[y][x].EntryHistory, "D") { // Been there, done that
+			if grid[y][x].EntryHistory != "" { // Passing once here always has the same result
 				return grid
 			}
 
@@ -164,7 +166,7 @@ func bounce(grid [][]tile, y, x int, direction byte) [][]tile {
 		}
 	} else if grid[y][x].Value == TILE_SPLIT_V {
 		if direction == 'L' || direction == 'R' {
-			if strings.Contains(grid[y][x].EntryHistory, "L") || strings.Contains(grid[y][x].EntryHistory, "R") { // Been there, done that
+			if grid[y][x].EntryHistory != "" { // Passing once here always has the same result
 				return grid
 			}
 
@@ -182,20 +184,14 @@ func bounce(grid [][]tile, y, x int, direction byte) [][]tile {
 
 func calculateEnergy(grid [][]tile) int {
 	energy := 0
-	var resultGrid [][]byte
 
 	for y := range grid {
-		resultGrid = append(resultGrid, []byte{})
 		for x := range grid[y] {
-			resultGrid[y] = append(resultGrid[y], grid[y][x].Value)
 			if grid[y][x].Energized {
 				energy++
-				resultGrid[y][x] = '#'
 			}
 		}
 	}
-
-	util.PrintMatrix(resultGrid)
 
 	return energy
 }
