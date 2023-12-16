@@ -51,9 +51,41 @@ func main() {
 	}
 
 	// Part 1
-	fmt.Println(calculateEnergy(bounce(grid, 0, -1, 'R')))
+	fmt.Println(calculateEnergy(bounce(copyGrid(grid), 0, -1, 'R')))
 
 	// Part 2
+	maxEnergy := 0
+	maxPos := []int{0, 0}
+	e := 0
+	for y := range grid {
+		e = calculateEnergy(bounce(copyGrid(grid), y, -1, 'R'))
+		if e > maxEnergy {
+			maxPos = []int{y, -1}
+			maxEnergy = e
+		}
+
+		e = calculateEnergy(bounce(copyGrid(grid), y, len(grid[y]), 'L'))
+		if e > maxEnergy {
+			maxPos = []int{y, len(grid[y])}
+			maxEnergy = e
+		}
+	}
+	for x := range grid[0] {
+		e = calculateEnergy(bounce(copyGrid(grid), -1, x, 'D'))
+		if e > maxEnergy {
+			maxPos = []int{-1, x}
+			maxEnergy = e
+		}
+
+		e = calculateEnergy(bounce(copyGrid(grid), len(grid), x, 'U'))
+		if e > maxEnergy {
+			maxPos = []int{len(grid), x}
+			maxEnergy = e
+		}
+	}
+
+	fmt.Println(maxPos)
+	fmt.Println(maxEnergy)
 }
 
 func bounce(grid [][]tile, y, x int, direction byte) [][]tile {
@@ -194,4 +226,14 @@ func calculateEnergy(grid [][]tile) int {
 	}
 
 	return energy
+}
+
+func copyGrid(grid [][]tile) [][]tile {
+	newGrid := make([][]tile, len(grid))
+	for y := range grid {
+		newGrid[y] = make([]tile, len(grid[y]))
+		copy(newGrid[y], grid[y])
+	}
+
+	return newGrid
 }
