@@ -1,6 +1,7 @@
 package util
 
 import (
+	"io"
 	"os"
 )
 
@@ -14,6 +15,34 @@ func FileFromArgs() *os.File {
 	}
 
 	return f
+}
+
+func GridFromArgsInt() [][]int {
+	file := FileFromArgs()
+
+	grid := [][]int{
+		{},
+	}
+	rowNumber := 0
+
+	b := make([]byte, 1)
+
+	for {
+		_, err := file.Read(b)
+		if err == io.EOF {
+			break
+		}
+
+		if b[0] == '\n' {
+			grid = append(grid, []int{})
+			rowNumber++
+			continue
+		}
+
+		grid[rowNumber] = append(grid[rowNumber], int(b[0])-0x30)
+	}
+
+	return grid
 }
 
 // ReadFileFromArgs returns all file content as a string
