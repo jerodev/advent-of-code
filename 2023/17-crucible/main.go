@@ -67,37 +67,37 @@ func main() {
 	fmt.Println(dijkstra(grid, queue, &distances))
 
 	// Print a grid showing the result path
-	//agrid := make([][]byte, len(grid))
-	//for i := range agrid {
-	//	agrid[i] = make([]byte, len(grid[0]))
-	//	for j := range grid[i] {
-	//		agrid[i][j] = '.'
-	//	}
-	//}
-	//
-	//y, x := len(grid)-1, len(grid[0])-1
-	//for {
-	//	if y == 0 && x == 0 {
-	//		break
-	//	}
-	//
-	//	position := fmt.Sprintf("%d,%d", y, x)
-	//	location := distances[position]
-	//	agrid[y][x] = location.Direction
-	//
-	//	switch location.Direction {
-	//	case '^':
-	//		y++
-	//	case 'v':
-	//		y--
-	//	case '<':
-	//		x++
-	//	case '>':
-	//		x--
-	//	}
-	//}
-	//
-	//util.PrintMatrix(agrid)
+	agrid := make([][]byte, len(grid))
+	for i := range agrid {
+		agrid[i] = make([]byte, len(grid[0]))
+		for j := range grid[i] {
+			agrid[i][j] = '.'
+		}
+	}
+
+	y, x := len(grid)-1, len(grid[0])-1
+	for {
+		if y == 0 && x == 0 {
+			break
+		}
+
+		position := fmt.Sprintf("%d,%d", y, x)
+		location := distances[position]
+		agrid[y][x] = location.Direction
+
+		switch location.Direction {
+		case '^':
+			y++
+		case 'v':
+			y--
+		case '<':
+			x++
+		case '>':
+			x--
+		}
+	}
+
+	util.PrintMatrix(agrid)
 }
 
 func dijkstra(grid [][]int, q *locationHeap, distances *map[string]location) int {
@@ -111,7 +111,7 @@ func dijkstra(grid [][]int, q *locationHeap, distances *map[string]location) int
 
 		// If the position is known, we already have the shortest position to it
 		position := fmt.Sprintf("%d,%d", d.Y, d.X)
-		if _, ok := (*distances)[position]; ok {
+		if loc, ok := (*distances)[position]; ok && loc.Distance <= d.Distance {
 			continue
 		}
 
