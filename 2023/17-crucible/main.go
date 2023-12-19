@@ -67,42 +67,47 @@ func main() {
 	fmt.Println(dijkstra(grid, queue, &distances))
 
 	// Print a grid showing the result path
-	agrid := make([][]byte, len(grid))
-	for i := range agrid {
-		agrid[i] = make([]byte, len(grid[0]))
-		for j := range grid[i] {
-			agrid[i][j] = '.'
-		}
-	}
-
-	y, x := len(grid)-1, len(grid[0])-1
-	for {
-		if y == 0 && x == 0 {
-			break
-		}
-
-		position := fmt.Sprintf("%d,%d", y, x)
-		location := distances[position]
-		agrid[y][x] = location.Direction
-
-		switch location.Direction {
-		case '^':
-			y++
-		case 'v':
-			y--
-		case '<':
-			x++
-		case '>':
-			x--
-		}
-	}
-
-	util.PrintMatrix(agrid)
+	//agrid := make([][]byte, len(grid))
+	//for i := range agrid {
+	//	agrid[i] = make([]byte, len(grid[0]))
+	//	for j := range grid[i] {
+	//		agrid[i][j] = '.'
+	//	}
+	//}
+	//
+	//y, x := len(grid)-1, len(grid[0])-1
+	//for {
+	//	if y == 0 && x == 0 {
+	//		break
+	//	}
+	//
+	//	position := fmt.Sprintf("%d,%d", y, x)
+	//	location := distances[position]
+	//	agrid[y][x] = location.Direction
+	//
+	//	switch location.Direction {
+	//	case '^':
+	//		y++
+	//	case 'v':
+	//		y--
+	//	case '<':
+	//		x++
+	//	case '>':
+	//		x--
+	//	}
+	//}
+	//
+	//util.PrintMatrix(agrid)
 }
 
 func dijkstra(grid [][]int, q *locationHeap, distances *map[string]location) int {
 	for {
 		d := heap.Pop(q).(destination)
+
+		// No more than 3 consecutive moves in the same direction
+		if d.DirectionCount > 3 {
+			continue
+		}
 
 		// If the position is known, we already have the shortest position to it
 		position := fmt.Sprintf("%d,%d", d.Y, d.X)
@@ -136,7 +141,7 @@ func dijkstra(grid [][]int, q *locationHeap, distances *map[string]location) int
 
 		// Push new destinations
 		// Going up
-		if d.Y > 0 && d.Direction != 'D' && (d.Direction != 'U' || d.DirectionCount < 3) {
+		if d.Y > 0 {
 			dCount := 1
 			if d.Direction == 'U' {
 				dCount += d.DirectionCount
@@ -151,7 +156,7 @@ func dijkstra(grid [][]int, q *locationHeap, distances *map[string]location) int
 			})
 		}
 		// Going down
-		if d.Y+1 < len(grid) && d.Direction != 'U' && (d.Direction != 'D' || d.DirectionCount < 3) {
+		if d.Y+1 < len(grid) {
 			dCount := 1
 			if d.Direction == 'D' {
 				dCount += d.DirectionCount
@@ -166,7 +171,7 @@ func dijkstra(grid [][]int, q *locationHeap, distances *map[string]location) int
 			})
 		}
 		// Going left
-		if d.X > 0 && d.Direction != 'R' && (d.Direction != 'L' || d.DirectionCount < 3) {
+		if d.X > 0 {
 			dCount := 1
 			if d.Direction == 'L' {
 				dCount += d.DirectionCount
@@ -181,7 +186,7 @@ func dijkstra(grid [][]int, q *locationHeap, distances *map[string]location) int
 			})
 		}
 		// Going right
-		if d.X+1 < len(grid[0]) && d.Direction != 'L' && (d.Direction != 'R' || d.DirectionCount < 3) {
+		if d.X+1 < len(grid[0]) {
 			dCount := 1
 			if d.Direction == 'R' {
 				dCount += d.DirectionCount
