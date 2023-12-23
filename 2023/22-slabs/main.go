@@ -4,6 +4,7 @@ import (
 	"advent-of-code/util"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 )
 
@@ -40,16 +41,40 @@ func (t tower) canMove(b *brick) bool {
 	return true
 }
 
+func (t tower) copy() tower {
+	newTower := make(tower, len(t))
+
+	for i, b := range t {
+		newTower[i] = &brick{
+			X1: b.X1,
+			Y1: b.Y1,
+			Z1: b.Z1,
+			X2: b.X2,
+			Y2: b.Y2,
+			Z2: b.Z2,
+		}
+	}
+
+	return newTower
+}
+
 // settle moves bricks in the tower until it is stable
-func (t tower) settle() {
+// The function returns the number of bricks that fell down
+func (t tower) settle() int {
+	fallenBricks := make([]int, 0, len(t))
+
 	for {
 		isStable := true
 
-		for _, b := range t {
+		for i, b := range t {
 			if t.canMove(b) {
 				b.Z1--
 				b.Z2--
 				isStable = false
+
+				if !slices.Contains(fallenBricks, i) {
+					fallenBricks = append(fallenBricks, i)
+				}
 			}
 		}
 
@@ -57,6 +82,8 @@ func (t tower) settle() {
 			break
 		}
 	}
+
+	return len(fallenBricks)
 }
 
 func main() {
@@ -96,11 +123,11 @@ func main() {
 
 	// Let the bricks fall until there is no more movement
 	bricks.settle()
-	printTowerSide(bricks)
 
 	// Now attempt to remove a brick without the tower collapsing
 	newTower := make(tower, len(bricks)-1)
 	stableBricks := 0
+	fallingBricks := 0
 	for i := range bricks {
 		newTower = append(append(tower{}, bricks[:i]...), bricks[i+1:]...)
 		stable := true
@@ -114,39 +141,11 @@ func main() {
 
 		if stable {
 			stableBricks++
+		} else {
+			fallingBricks += newTower.copy().settle()
 		}
 	}
 
 	fmt.Println(stableBricks)
-}
-
-func printTowerSide(t tower) {
-	maxX, maxZ := 0, 0
-	for _, b := range t {
-		maxX = util.Max(util.Max(maxX, b.X1), b.X2)
-		maxZ = util.Max(util.Max(maxZ, b.Z1), b.Z2)
-	}
-
-	grid := make([][]byte, maxZ)
-	for i := range grid {
-		grid[i] = make([]byte, maxX+1)
-		for j := range grid[i] {
-			grid[i][j] = '.'
-		}
-	}
-
-	for i, b := range t {
-		x := util.Min(b.X1, b.X2)
-		dx := util.Abs(b.X1 - b.X2)
-		z := util.Min(b.Z1, b.Z2) - 1
-		dz := util.Abs(b.Z1 - b.Z2)
-
-		for iz := 0; iz <= dz; iz++ {
-			for ix := 0; ix <= dx; ix++ {
-				grid[z+iz][x+ix] = byte(0x41 + i)
-			}
-		}
-	}
-
-	util.PrintMatrix(grid)
+	fmt.Println(fallingBricks)
 }
