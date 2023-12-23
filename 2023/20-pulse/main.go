@@ -18,6 +18,7 @@ const (
 )
 
 type module struct {
+	name         string
 	moduleType   byte
 	destinations []string
 	memory       bool
@@ -26,37 +27,26 @@ type module struct {
 func (m *module) propagate(p pulse) ([]string, bool) {
 	if m.moduleType == MODULE_FLIP_FLOP {
 		if p.level == PULSE_LOW {
-			if m.memory == PULSE_HIGH {
-				m.memory = PULSE_LOW
-			} else {
-				m.memory = PULSE_HIGH
-			}
+			m.memory = !m.memory
+
+			return m.destinations, m.memory
 		}
 
-		return m.destinations, m.memory
+		return []string{}, m.memory
 	}
 
-	// Remember module
-	m.memory = m.memory && p.level
-	if m.memory {
-		return m.destinations, PULSE_LOW
+	if m.moduleType == MODULE_REMEMBER {
+		m.memory = m.memory && p.level
+		return m.destinations, !m.memory
 	}
 
-	return m.destinations, PULSE_HIGH
+	// Broadcast
+	return m.destinations, p.level
 }
 
 type pulse struct {
 	level       bool
 	destination *module
-}
-
-type pulseQueue []pulse
-
-func (q *pulseQueue) pop() pulse {
-	p := (*q)[0]
-	*q = (*q)[1:]
-
-	return p
 }
 
 func main() {
@@ -76,9 +66,10 @@ func main() {
 			}
 
 			modules[name] = &module{
+				name:         name,
 				moduleType:   parts[0][0],
 				destinations: strings.Split(parts[1], ", "),
-				memory:       true,
+				memory:       parts[0][0] == MODULE_REMEMBER,
 			}
 
 			if err == io.EOF {
@@ -93,8 +84,10 @@ func main() {
 	}
 
 	var high, low int64 = 0, 0
-	for b := 0; b < 1000; b++ {
-		pulses := pulseQueue{
+	var pulses []pulse
+	var p pulse
+	for b := 0; b < 4; b++ {
+		pulses = []pulse{
 			{
 				level:       PULSE_LOW,
 				destination: modules["broadcaster"],
@@ -107,7 +100,8 @@ func main() {
 				break
 			}
 
-			p := pulses.pop()
+			p = pulses[0]
+			pulses = pulses[1:]
 
 			destinations, hilo := p.destination.propagate(p)
 			if hilo == PULSE_HIGH {
@@ -117,6 +111,7 @@ func main() {
 			}
 
 			for _, d := range destinations {
+				fmt.Printf("%v -%v-> %v\n", p.destination.name, hilo, d)
 				if d, ok := modules[d]; ok {
 					pulses = append(pulses, pulse{
 						level:       hilo,
@@ -125,6 +120,15 @@ func main() {
 				}
 			}
 		}
+
+		// Reset memory modules
+		for _, m := range modules {
+			if m.moduleType == MODULE_REMEMBER {
+				m.memory = true
+			}
+		}
+
+		fmt.Println()
 	}
 
 	fmt.Println(high, low, high*low)
