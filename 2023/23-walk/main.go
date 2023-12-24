@@ -46,11 +46,11 @@ func main() {
 		grid[rowNumber] = append(grid[rowNumber], b[0])
 	}
 
-	util.PrintMatrix(grid)
-	fmt.Println(walk(grid, step{1, 1, SLOPE_D}, []string{"1,0"}))
+	fmt.Println(walk(grid, step{1, 1, SLOPE_D}, []string{"1,0"}, false))
+	fmt.Println(walk(grid, step{1, 1, SLOPE_D}, []string{"1,0"}, true))
 }
 
-func walk(grid [][]byte, start step, pastPositions []string) int {
+func walk(grid [][]byte, start step, pastPositions []string, ignoreSlopes bool) int {
 	destination := image.Point{
 		X: len(grid[0]) - 2,
 		Y: len(grid) - 1,
@@ -58,10 +58,10 @@ func walk(grid [][]byte, start step, pastPositions []string) int {
 	steps := 1
 
 	pastPositions = append(pastPositions, fmt.Sprintf("%d,%d", start.X, start.Y))
+	var lastPosition image.Point
 	var newPosition step
 
 	for {
-		var lastPosition image.Point
 		switch start.direction {
 		case SLOPE_U:
 			lastPosition = image.Point{
@@ -87,8 +87,13 @@ func walk(grid [][]byte, start step, pastPositions []string) int {
 
 		var possiblePositions []step
 		for _, d := range []step{{-1, 0, SLOPE_L}, {0, -1, SLOPE_U}, {1, 0, SLOPE_R}, {0, 1, SLOPE_D}} {
-			// We don't walk in forests or up slopes
-			if grid[start.Y+d.Y][start.X+d.X] != PATH && grid[start.Y+d.Y][start.X+d.X] != d.direction {
+			// We don't walk in forests
+			if grid[start.Y+d.Y][start.X+d.X] == FOREST {
+				continue
+			}
+
+			// We don't walk up slopes... Or do we?
+			if !ignoreSlopes && grid[start.Y+d.Y][start.X+d.X] != PATH && grid[start.Y+d.Y][start.X+d.X] != d.direction {
 				continue
 			}
 
@@ -134,7 +139,7 @@ func walk(grid [][]byte, start step, pastPositions []string) int {
 				return steps + 1
 			}
 
-			d := walk(grid, p, pastPositions)
+			d := walk(grid, p, pastPositions, ignoreSlopes)
 			if d > maxDistance {
 				maxDistance = d
 			}
