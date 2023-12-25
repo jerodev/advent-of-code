@@ -46,44 +46,45 @@ func main() {
 		grid[rowNumber] = append(grid[rowNumber], b[0])
 	}
 
-	fmt.Println(walk(grid, step{1, 1, SLOPE_D}, []string{"1,0"}, false))
-	fmt.Println(walk(grid, step{1, 1, SLOPE_D}, []string{"1,0"}, true))
+	fmt.Println(walk(grid, step{1, 1, SLOPE_D}, []string{"1,0"}, &map[string]int{}, false))
+	fmt.Println(walk(grid, step{1, 1, SLOPE_D}, []string{"1,0"}, &map[string]int{}, true))
 }
 
-func walk(grid [][]byte, start step, pastPositions []string, ignoreSlopes bool) int {
+func walk(grid [][]byte, start step, pastPositions []string, walkCache *map[string]int, ignoreSlopes bool) int {
 	destination := image.Point{
 		X: len(grid[0]) - 2,
 		Y: len(grid) - 1,
 	}
 	steps := 1
 
-	pastPositions = append(pastPositions, fmt.Sprintf("%d,%d", start.X, start.Y))
 	var lastPosition image.Point
 	var newPosition step
 
-	for {
-		switch start.direction {
-		case SLOPE_U:
-			lastPosition = image.Point{
-				X: start.X,
-				Y: start.Y + 1,
-			}
-		case SLOPE_R:
-			lastPosition = image.Point{
-				X: start.X - 1,
-				Y: start.Y,
-			}
-		case SLOPE_D:
-			lastPosition = image.Point{
-				X: start.X,
-				Y: start.Y - 1,
-			}
-		case SLOPE_L:
-			lastPosition = image.Point{
-				X: start.X + 1,
-				Y: start.Y,
-			}
+	switch start.direction {
+	case SLOPE_U:
+		lastPosition = image.Point{
+			X: start.X,
+			Y: start.Y + 1,
 		}
+	case SLOPE_R:
+		lastPosition = image.Point{
+			X: start.X - 1,
+			Y: start.Y,
+		}
+	case SLOPE_D:
+		lastPosition = image.Point{
+			X: start.X,
+			Y: start.Y - 1,
+		}
+	case SLOPE_L:
+		lastPosition = image.Point{
+			X: start.X + 1,
+			Y: start.Y,
+		}
+	}
+
+	for {
+		pastPositions = append(pastPositions, fmt.Sprintf("%d,%d", start.X, start.Y))
 
 		var possiblePositions []step
 		for _, d := range []step{{-1, 0, SLOPE_L}, {0, -1, SLOPE_U}, {1, 0, SLOPE_R}, {0, 1, SLOPE_D}} {
@@ -128,21 +129,34 @@ func walk(grid [][]byte, start step, pastPositions []string, ignoreSlopes bool) 
 			}
 
 			steps++
+			lastPosition = image.Point{
+				X: start.X,
+				Y: start.Y,
+			}
 			start = possiblePositions[0]
 			continue
 		}
 
 		// If multiple directions, walk them all
 		maxDistance := 0
+		var d int
+		var ok bool
 		for _, p := range possiblePositions {
 			if p.X == destination.X && p.Y == destination.Y {
 				return steps + 1
 			}
 
-			d := walk(grid, p, pastPositions, ignoreSlopes)
+			walkCacheKey := fmt.Sprintf("%d,%d,%v", p.X, p.Y, p.direction)
+			d, ok = (*walkCache)[walkCacheKey]
+			if !ok {
+				d = walk(grid, p, pastPositions, walkCache, ignoreSlopes)
+			}
+
 			if d > maxDistance {
 				maxDistance = d
 			}
+
+			(*walkCache)[walkCacheKey] = d
 		}
 
 		return steps + maxDistance
