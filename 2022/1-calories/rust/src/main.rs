@@ -8,8 +8,7 @@ fn main() {
         .map(|x| x.split("\n").map(|y| y.parse::<u32>().unwrap_or(0)).sum())
         .collect::<Vec<u32>>();
 
-    calories.sort();
-    calories.reverse();
+    calories.sort_by(|a, b| b.cmp(a));
 
     println!("{:?}", calories[0]);
     println!("{:?}", calories.iter().take(3).sum::<u32>());
