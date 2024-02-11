@@ -1,0 +1,10 @@
+[package]
+name = "day4-cleanup"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "day4-cleanup"
+path = "main.rs"
+
+[dependencies]
