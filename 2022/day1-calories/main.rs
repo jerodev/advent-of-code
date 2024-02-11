@@ -1,7 +1,7 @@
 use std::fs;
 
 fn main() {
-    let contents = fs::read_to_string("../input.txt").unwrap();
+    let contents = fs::read_to_string("./day1-calories/input.txt").unwrap();
 
     let mut calories = contents.as_str()
         .split("\n\n")
