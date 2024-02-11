@@ -1,0 +1,10 @@
+[package]
+name = "day3-rucksack"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "day3-rucksack"
+path = "main.rs"
+
+[dependencies]
