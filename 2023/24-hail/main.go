@@ -116,7 +116,7 @@ func main() {
 			}
 
 			// Point already exists
-			key := fmt.Sprintf("%d,%d", point.X, point.Y)
+			key := fmt.Sprintf("%v,%v", point.X, point.Y)
 			if slices.Contains(history, key) {
 				continue
 			}
