@@ -15,12 +15,12 @@ type brick struct {
 
 func (bt *brick) isSupporting(b *brick) bool {
 	// Needs to be one level above the supporting brick
-	if util.Max(bt.Z1, bt.Z2)+1 != util.Min(b.Z1, b.Z2) {
+	if max(bt.Z1, bt.Z2)+1 != min(b.Z1, b.Z2) {
 		return false
 	}
 
 	// The shapes should cross each other
-	return util.Max(bt.X1, b.X1) <= util.Min(bt.X2, b.X2) && util.Max(bt.Y1, b.Y1) <= util.Min(bt.Y2, b.Y2)
+	return max(bt.X1, b.X1) <= min(bt.X2, b.X2) && max(bt.Y1, b.Y1) <= min(bt.Y2, b.Y2)
 }
 
 type tower []*brick
