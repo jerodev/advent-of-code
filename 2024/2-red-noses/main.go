@@ -15,16 +15,18 @@ func main() {
 	scan := bufio.NewScanner(file)
 	var safeCount int
 	var secondSafeCount int
+	var errorIndex int
 
 	for scan.Scan() {
 		row := util.StringToInts(scan.Text(), " ")
 
-		if isSafe(row, -1) {
+		if errorIndex = findErrorIndex(row, -1); errorIndex == -1 {
 			safeCount++
 			secondSafeCount++
 		} else {
-			for i := range len(row) {
-				if isSafe(row, i) {
+			// Try removing any of the values arround the error index
+			for i := range 3 {
+				if findErrorIndex(row, errorIndex+1-i) == -1 {
 					secondSafeCount++
 					break
 				}
@@ -36,7 +38,7 @@ func main() {
 	fmt.Println(secondSafeCount)
 }
 
-func isSafe(row []int, skip int) bool {
+func findErrorIndex(row []int, skip int) int {
 	var diff int
 	var sign int8
 
@@ -55,7 +57,7 @@ func isSafe(row []int, skip int) bool {
 
 		// Diff bigger than max, unsafe!				  // direction changed, unsafe!
 		if diff == 0 || diff > maxDiff || diff < -maxDiff || (diff < 0 && sign == 1) || (diff > 0 && sign == -1) {
-			return false
+			return i
 		}
 
 		// Track the direction, for future usage
@@ -68,5 +70,5 @@ func isSafe(row []int, skip int) bool {
 		}
 	}
 
-	return true
+	return -1
 }
