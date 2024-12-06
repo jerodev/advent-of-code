@@ -4,6 +4,7 @@ import (
 	"advent-of-code/util"
 	"bufio"
 	"fmt"
+	"math/rand"
 	"strings"
 )
 
@@ -29,34 +30,49 @@ func main() {
 		})
 	}
 
-	var result int
-	var update map[int]int
+	var result, invalidResult int
 	for scan.Scan() {
-		valid := true
+		row := scan.Text()
+		ints := util.StringToInts(row, ",")
 
-		parts = strings.Split(scan.Text(), ",")
-		update = map[int]int{}
-		for i := range parts {
-			update[util.MustAtoi(parts[i])] = i
-		}
+		if isValidRow(ints, rules) {
+			mid := int(len(ints) / 2)
+			result += ints[mid]
+		} else {
+			for {
+				rand.Shuffle(len(ints), func(i, j int) {
+					ints[i], ints[j] = ints[j], ints[i]
+				})
 
-		var pos1, pos2 int
-		var ok1, ok2 bool
-		for i := range rules {
-			pos1, ok1 = update[rules[i][0]]
-			pos2, ok2 = update[rules[i][1]]
-
-			if ok1 && ok2 && pos1 >= pos2 {
-				valid = false
-				break
+				if isValidRow(ints, rules) {
+					mid := int(len(ints) / 2)
+					invalidResult += ints[mid]
+					break
+				}
 			}
-		}
-
-		if valid {
-			mid := int(len(parts) / 2)
-			result += util.MustAtoi(parts[mid])
 		}
 	}
 
 	fmt.Println(result)
+	fmt.Println(invalidResult)
+}
+
+func isValidRow(ints []int, rules [][2]int) bool {
+	update := map[int]int{}
+	for i := range ints {
+		update[ints[i]] = i
+	}
+
+	var pos1, pos2 int
+	var ok1, ok2 bool
+	for i := range rules {
+		pos1, ok1 = update[rules[i][0]]
+		pos2, ok2 = update[rules[i][1]]
+
+		if ok1 && ok2 && pos1 >= pos2 {
+			return false
+		}
+	}
+
+	return true
 }
