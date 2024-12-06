@@ -37,14 +37,26 @@ func main() {
 	}
 
 	// Walk the grid
-	fmt.Println(walkGrid(copyGrid(grid)))
+	fmt.Println(walkGrid(copyGrid(grid), position{-1, -1}))
+
+	// Add random obstacles and test again
+	var infLoops int
+	for y := range len(grid) {
+		for x := range len(grid[0]) {
+			if walkGrid(copyGrid(grid), position{x, y}) == -1 {
+				infLoops++
+			}
+		}
+	}
+
+	fmt.Println(infLoops)
 }
 
 type position struct {
 	X, Y int
 }
 
-func walkGrid(grid [][]byte) int {
+func walkGrid(grid [][]byte, obstacle position) int {
 	guard := position{guardStart.X, guardStart.Y}
 
 	stepCount := 1
@@ -58,12 +70,12 @@ func walkGrid(grid [][]byte) int {
 			return stepCount
 		}
 
-		if grid[ny][nx] == obstacleBlock {
+		if grid[ny][nx] == obstacleBlock || (nx == obstacle.X && ny == obstacle.Y) {
 			dx, dy = (dx+1)%4, (dy+1)%4
 			continue
 		} else if grid[ny][nx] == 0 {
 			stepCount++
-		} else if grid[ny][nx] > 4 {
+		} else if grid[ny][nx] == 5 {
 			return -1 // Infinite loop detected!
 		}
 
