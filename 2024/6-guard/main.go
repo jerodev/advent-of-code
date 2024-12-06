@@ -10,7 +10,6 @@ import (
 const (
 	freeBlock     = '.'
 	obstacleBlock = '#'
-	visiteBlock   = 'X'
 )
 
 var direction = []int{-1, 0, 1, 0}
@@ -30,7 +29,6 @@ func main() {
 		guardIndex = strings.Index(row, "^")
 		if guardIndex > -1 {
 			guardStart = position{guardIndex, len(grid)}
-			row = strings.Replace(row, "^", "X", 1)
 		}
 
 		grid = append(grid, []byte(row))
