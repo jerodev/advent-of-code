@@ -27,7 +27,7 @@ func main() {
 	scan := bufio.NewScanner(file)
 
 	var parts []string
-	var sum, result int
+	var result, sum int
 	var numbers []int
 
 	for scan.Scan() {
@@ -35,26 +35,33 @@ func main() {
 		sum, _ = strconv.Atoi(parts[0])
 		numbers = util.StringToInts(parts[1], " ")
 
-		possibilities := int(math.Pow(2, float64(len(numbers)-1)))
-		for i := range possibilities {
-			bin := ("0000000000" + fmt.Sprintf("%b", i))
-			bin = bin[len(bin)-len(numbers)+1:]
-
-			total := numbers[0]
-			for k := range len(bin) {
-				total = modifiers[bin[k]-'0'](total, numbers[k+1])
-
-				if total > sum {
-					break
-				}
-			}
-
-			if total == sum {
-				result += total
-				break
-			}
+		if resolves(sum, numbers) {
+			result += sum
 		}
 	}
 
 	fmt.Println(result)
+}
+
+func resolves(sum int, numbers []int) bool {
+	possibilities := int(math.Pow(2, float64(len(numbers)-1)))
+	for i := range possibilities {
+		bin := ("0000000000" + fmt.Sprintf("%b", i))
+		bin = bin[len(bin)-len(numbers)+1:]
+
+		total := numbers[0]
+		for k := range len(bin) {
+			total = modifiers[bin[k]-'0'](total, numbers[k+1])
+
+			if total > sum {
+				break
+			}
+		}
+
+		if total == sum {
+			return true
+		}
+	}
+
+	return false
 }
