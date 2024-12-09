@@ -4,7 +4,6 @@ import (
 	"advent-of-code/util"
 	"bufio"
 	"fmt"
-	"math/rand"
 	"strings"
 )
 
@@ -36,20 +35,13 @@ func main() {
 		ints := util.StringToInts(row, ",")
 
 		if isValidRow(ints, rules) {
-			mid := int(len(ints) / 2)
+			mid := len(ints) / 2
 			result += ints[mid]
 		} else {
-			for {
-				rand.Shuffle(len(ints), func(i, j int) {
-					ints[i], ints[j] = ints[j], ints[i]
-				})
+			ints = fixInvalidRow(ints, rules)
 
-				if isValidRow(ints, rules) {
-					mid := int(len(ints) / 2)
-					invalidResult += ints[mid]
-					break
-				}
-			}
+			mid := len(ints) / 2
+			invalidResult += ints[mid]
 		}
 	}
 
@@ -58,16 +50,16 @@ func main() {
 }
 
 func isValidRow(ints []int, rules [][2]int) bool {
-	update := map[int]int{}
+	position := map[int]int{}
 	for i := range ints {
-		update[ints[i]] = i
+		position[ints[i]] = i
 	}
 
 	var pos1, pos2 int
 	var ok1, ok2 bool
 	for i := range rules {
-		pos1, ok1 = update[rules[i][0]]
-		pos2, ok2 = update[rules[i][1]]
+		pos1, ok1 = position[rules[i][0]]
+		pos2, ok2 = position[rules[i][1]]
 
 		if ok1 && ok2 && pos1 >= pos2 {
 			return false
@@ -75,4 +67,28 @@ func isValidRow(ints []int, rules [][2]int) bool {
 	}
 
 	return true
+}
+
+func fixInvalidRow(ints []int, rules [][2]int) []int {
+outer:
+	for !isValidRow(ints, rules) {
+		position := map[int]int{}
+		for i := range ints {
+			position[ints[i]] = i
+		}
+
+		var pos1, pos2 int
+		var ok1, ok2 bool
+		for i := range rules {
+			pos1, ok1 = position[rules[i][0]]
+			pos2, ok2 = position[rules[i][1]]
+
+			if ok1 && ok2 && pos1 >= pos2 {
+				ints[pos1], ints[pos2] = ints[pos2], ints[pos1]
+				continue outer
+			}
+		}
+	}
+
+	return ints
 }
