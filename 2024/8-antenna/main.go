@@ -34,16 +34,20 @@ func main() {
 		grid = append(grid, row)
 	}
 
-	var antinodeCount int
+	var antinodeCount, antinodeHarmonicCount int
 	for y := range len(grid) {
 		for x := range len(grid[0]) {
-			if isAntinode(x, y) {
+			if isAntinode(x, y, false) {
 				antinodeCount++
+				antinodeHarmonicCount++
+			} else if isAntinode(x, y, true) {
+				antinodeHarmonicCount++
 			}
 		}
 	}
 
 	fmt.Println(antinodeCount)
+	fmt.Println(antinodeHarmonicCount)
 }
 
 type position struct {
@@ -54,7 +58,7 @@ func (p position) eq(q position) bool {
 	return p.X == q.X && p.Y == q.Y
 }
 
-func isAntinode(x, y int) bool {
+func isAntinode(x, y int, harmonics bool) bool {
 	var diff float64
 
 	for k := range antennas {
@@ -65,9 +69,11 @@ func isAntinode(x, y int) bool {
 				}
 
 				// Are towers on double distances?
-				diff = math.Sqrt(float64(util.IntPow(x-antennas[k][i].X, 2)+util.IntPow(y-antennas[k][i].Y, 2))) /
-					math.Sqrt(float64(util.IntPow(x-antennas[k][j].X, 2)+util.IntPow(y-antennas[k][j].Y, 2)))
-				if diff == 2 || diff == .5 {
+				if !harmonics {
+					diff = math.Sqrt(float64(util.IntPow(x-antennas[k][i].X, 2)+util.IntPow(y-antennas[k][i].Y, 2))) /
+						math.Sqrt(float64(util.IntPow(x-antennas[k][j].X, 2)+util.IntPow(y-antennas[k][j].Y, 2)))
+				}
+				if harmonics || diff == 2 || diff == .5 {
 
 					// Test if the triangle create by these points has surface 0, this means they are all on a single line
 					if x*(antennas[k][i].Y-antennas[k][j].Y)+antennas[k][i].X*(antennas[k][j].Y-y)+antennas[k][j].X*(y-antennas[k][i].Y) == 0 {
