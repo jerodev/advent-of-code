@@ -71,22 +71,20 @@ func isValidRow(ints []int, rules [][2]int) bool {
 
 func fixInvalidRow(ints []int, rules [][2]int) []int {
 outer:
-	for !isValidRow(ints, rules) {
-		position := map[int]int{}
-		for i := range ints {
-			position[ints[i]] = i
-		}
+	position := map[int]int{}
+	for i := range ints {
+		position[ints[i]] = i
+	}
 
-		var pos1, pos2 int
-		var ok1, ok2 bool
-		for i := range rules {
-			pos1, ok1 = position[rules[i][0]]
-			pos2, ok2 = position[rules[i][1]]
+	var pos1, pos2 int
+	var ok1, ok2 bool
+	for i := range rules {
+		pos1, ok1 = position[rules[i][0]]
+		pos2, ok2 = position[rules[i][1]]
 
-			if ok1 && ok2 && pos1 >= pos2 {
-				ints[pos1], ints[pos2] = ints[pos2], ints[pos1]
-				continue outer
-			}
+		if ok1 && ok2 && pos1 >= pos2 {
+			ints[pos1], ints[pos2] = ints[pos2], ints[pos1]
+			goto outer
 		}
 	}
 
