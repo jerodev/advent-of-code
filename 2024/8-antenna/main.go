@@ -5,18 +5,19 @@ import (
 	"bufio"
 	"fmt"
 	"math"
-	"slices"
 )
 
 const nothing = '.'
+
+var grid [][]byte
+var antennas map[byte][]position
 
 func main() {
 	file := util.FileFromArgs()
 	scan := bufio.NewScanner(file)
 
-	antennas := map[byte][]position{}
+	antennas = map[byte][]position{}
 
-	var grid [][]byte
 	var row []byte
 	for scan.Scan() {
 		row = scan.Bytes()
@@ -33,26 +34,16 @@ func main() {
 		grid = append(grid, row)
 	}
 
-	var antinodes, points []position
-	for k := range antennas {
-		for i := range antennas[k] {
-			for j := range antennas[k] {
-				if i == j {
-					continue
-				}
-
-				points = calculateAntinodes(antennas[k][i], antennas[k][j])
-				for p := range points {
-					if slices.IndexFunc(antinodes, func(pp position) bool { return points[p].eq(pp) }) == -1 {
-						antinodes = append(antinodes, points[p])
-					}
-				}
-
+	var antinodeCount int
+	for y := range len(grid) {
+		for x := range len(grid[0]) {
+			if isAntinode(x, y) {
+				antinodeCount++
 			}
 		}
 	}
 
-	fmt.Println(len(antinodes))
+	fmt.Println(antinodeCount)
 }
 
 type position struct {
@@ -63,20 +54,29 @@ func (p position) eq(q position) bool {
 	return p.X == q.X && p.Y == q.Y
 }
 
-// calculateAntinodes will calculate all antinodes between two antennas
-func calculateAntinodes(c1, c2 position) []position {
-	var positions []position
+func isAntinode(x, y int) bool {
+	var diff float64
 
-	// sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
-	d := math.Sqrt(float64((c1.X-c2.X)*(c1.X-c2.X) + (c1.Y-c2.Y)*(c1.Y-c2.Y)))
+	for k := range antennas {
+		for i := range antennas[k] {
+			for j := range antennas[k] {
+				if i == j {
+					continue
+				}
 
-	for r := range 20 {
-		if d > float64(r+2*r) {
-			continue // Circles don't touch
+				// Are towers on double distances?
+				diff = math.Sqrt(float64(util.IntPow(x-antennas[k][i].X, 2)+util.IntPow(y-antennas[k][i].Y, 2))) /
+					math.Sqrt(float64(util.IntPow(x-antennas[k][j].X, 2)+util.IntPow(y-antennas[k][j].Y, 2)))
+				if diff == 2 || diff == .5 {
+
+					// Test if the triangle create by these points has surface 0, this means they are all on a single line
+					if x*(antennas[k][i].Y-antennas[k][j].Y)+antennas[k][i].X*(antennas[k][j].Y-y)+antennas[k][j].X*(y-antennas[k][i].Y) == 0 {
+						return true
+					}
+				}
+			}
 		}
-
-		// TODO: calculate touch points
 	}
 
-	return positions
+	return false
 }
