@@ -9,30 +9,40 @@ import (
 func main() {
 	stones := util.StringToInts(util.ReadFileFromArgs(), " ")
 
-	for i := 0; i < 25; i++ {
-		stones = blink(stones)
-		fmt.Println(len(stones))
+	pebbles := make(map[int]int, len(stones))
+	for i := range stones {
+		pebbles[stones[i]] += 1
 	}
 
-	fmt.Println(len(stones))
+	for i := 0; i < 75; i++ {
+		pebbles = blink(pebbles)
+	}
+
+	var count int
+	for i := range pebbles {
+		count += pebbles[i]
+	}
+
+	fmt.Println(count)
 }
 
-func blink(stones []int) []int {
-	result := make([]int, 0, len(stones))
+func blink(stones map[int]int) map[int]int {
+	pebbles := map[int]int{}
 	var l, left, mod int
 
-	for i := range stones {
-		if stones[i] == 0 {
-			result = append(result, 1)
-		} else if l = util.IntLength(stones[i]); l%2 == 0 {
+	for k, v := range stones {
+		if k == 0 {
+			pebbles[1] += v
+		} else if l = util.IntLength(k); l%2 == 0 {
 			mod = int(math.Pow(10, float64(l/2)))
-			left = int(stones[i] / mod)
-			result = append(result, left)
-			result = append(result, stones[i]-left*mod)
+			left = int(k / mod)
+
+			pebbles[left] += v
+			pebbles[k-left*mod] += v
 		} else {
-			result = append(result, stones[i]*2024)
+			pebbles[k*2024] += v
 		}
 	}
 
-	return result
+	return pebbles
 }

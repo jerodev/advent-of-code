@@ -10,8 +10,9 @@ func Abs[I constraints.Integer](v I) I {
 	return v
 }
 
-func IntLength(v int) int {
-	x, count := 10, 1
+func IntLength[I constraints.Integer](v I) int {
+	var x I = 10
+	count := 1
 
 	for x <= v {
 		x *= 10
@@ -21,7 +22,7 @@ func IntLength(v int) int {
 	return count
 }
 
-func IntPow(n, m int) int {
+func IntPow[I constraints.Integer](n, m I) I {
 	if m == 0 {
 		return 1
 	}
@@ -31,7 +32,8 @@ func IntPow(n, m int) int {
 	}
 
 	result := n
-	for i := 2; i <= m; i++ {
+	var i I
+	for i = 2; i <= m; i++ {
 		result *= n
 	}
 	return result
