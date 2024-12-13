@@ -7,7 +7,7 @@ import (
 )
 
 var grid [][]byte
-var history map[byte][]position
+var visited [][]bool
 
 func main() {
 	file := util.FileFromArgs()
@@ -15,9 +15,9 @@ func main() {
 
 	for scan.Scan() {
 		grid = append(grid, scan.Bytes())
+		visited = append(visited, make([]bool, len(grid[len(grid)-1])))
 	}
 
-	history = map[byte][]position{}
 	var area, perimeter, sum int
 	for y := range grid {
 		for x := range grid[y] {
@@ -25,7 +25,7 @@ func main() {
 			sum += area * perimeter
 
 			// Debug: print the found area
-			if area > 0 {
+			if area != 0 {
 				fmt.Println(string(grid[y][x]), area, perimeter)
 			}
 		}
@@ -34,26 +34,13 @@ func main() {
 	fmt.Println(sum)
 }
 
-type position struct {
-	X, Y int
-}
-
 // measure returns the area and peremiter this position is part of
 func measure(x, y int) (int, int) {
-	// Have we passed here yet?
-	if _, exists := history[grid[y][x]]; exists {
-		for i := range history[grid[y][x]] {
-			if history[grid[y][x]][i].X == x && history[grid[y][x]][i].Y == y {
-				return 0, 0
-			}
-		}
-
-		history[grid[y][x]] = append(history[grid[y][x]], position{x, y})
-	} else {
-		history[grid[y][x]] = []position{
-			{x, y},
-		}
+	if visited[y][x] {
+		return 0, 0
 	}
+
+	visited[y][x] = true
 
 	// Measure shapes
 	area, perimeter := 1, 0
