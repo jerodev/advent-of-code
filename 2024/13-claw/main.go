@@ -4,6 +4,7 @@ import (
 	"advent-of-code/util"
 	"bufio"
 	"fmt"
+	"math"
 	"regexp"
 )
 
@@ -30,13 +31,12 @@ func main() {
 		prize = parsePosition(scan.Bytes())
 		scan.Scan()
 
-		if buttonA.X+buttonA.Y > buttonB.X+buttonB.Y {
-			da, db = simulate(buttonA, buttonB, prize)
-			dTokens = da*3 + db
-		} else {
-			da, db = simulate(buttonB, buttonA, prize)
-			dTokens = db*3 + da
-		}
+		// Part 2
+		prize.X += 10000000000000
+		prize.Y += 10000000000000
+
+		da, db = simulate(buttonA, buttonB, prize)
+		dTokens = da*3 + db
 
 		fmt.Println(buttonA, buttonB, prize, dTokens)
 
@@ -60,31 +60,14 @@ func parsePosition(line []byte) position {
 }
 
 func simulate(buttonA, buttonB, prize position) (int, int) {
-	maxA := min(100, prize.X/buttonA.X, prize.Y/buttonA.Y)
-	maxB := min(100, prize.X/buttonB.X, prize.Y/buttonB.Y)
-	var da, db, dPresses int
-	var p position
-	var found bool
+	var da, db float64
 
-outer:
-	for da = maxA; da >= 0; da-- {
-		dPresses = da
-		p.X = buttonA.X * dPresses
-		p.Y = buttonA.Y * dPresses
-
-		for db = 0; db < maxB; db++ {
-			if p.X+db*buttonB.X == prize.X && p.Y+db*buttonB.Y == prize.Y {
-				dPresses += db
-				found = true
-				break outer
-			}
-		}
-
-	}
-
-	if !found {
+	db = float64(buttonA.Y*prize.X-buttonA.X*prize.Y) / float64(buttonB.X*buttonA.Y-buttonB.Y*buttonA.X)
+	if db != math.Floor(db) {
 		return 0, 0
 	}
 
-	return da, db
+	da = float64(prize.Y-int(db)*buttonB.Y) / float64(buttonA.Y)
+
+	return int(da), int(db)
 }
