@@ -72,7 +72,7 @@ func main() {
 	for scan.Scan() {
 		for _, b := range scan.Bytes() {
 			moveObject(robot.X, robot.Y, b, true)
-			moveObject2(robot2.X, robot2.Y, b, true)
+			moveRobot2(robot2.X, robot2.Y, b)
 
 			// util.PrintMatrix(grid2)
 		}
@@ -127,7 +127,35 @@ func moveObject(x, y int, direction byte, isRobot bool) bool {
 	return true
 }
 
-func moveObject2(x, y int, direction byte, isRobot bool) bool {
+func moveRobot2(x, y int, direction byte) {
+	dx := x + moves[direction].X
+	dy := y + moves[direction].Y
+
+	if grid2[dy][dx] == boundry {
+		return
+	}
+
+	// Always start from the left box part
+	if grid2[dy][dx] == boxRight || grid2[dy][dx] == boxLeft {
+		if !canBoxMove(dx, dy, direction) {
+			return
+		}
+
+		moveBox(dx, dy, direction)
+	}
+
+	grid2[y][x] = empty
+	robot2.X = dx
+	robot2.Y = dy
+	grid2[dy][dx] = '@'
+}
+
+func canBoxMove(x, y int, direction byte) bool {
+	// Always asume the left of the box
+	if grid2[y][x] == boxRight {
+		x--
+	}
+
 	dx := x + moves[direction].X
 	dy := y + moves[direction].Y
 
@@ -135,90 +163,61 @@ func moveObject2(x, y int, direction byte, isRobot bool) bool {
 		return false
 	}
 
-	// Always start from the left box part
-	bx := dx
-	if grid2[dy][dx] == boxRight {
-		bx -= 1
-	}
-
-	if grid2[dy][bx] == boxLeft {
-		switch direction {
-		case up:
-			if (grid2[dy-1][bx] == empty && grid2[dy-1][bx+1] == empty) || (grid2[dy-1][bx] == boxRight && grid2[dy-1][bx+1] == boxLeft && can2BoxesMove(bx-1, y-1, direction) && moveObject2(bx, dy, direction, false) && moveObject2(bx+1, dy, direction, false)) || (grid2[dy-1][bx] == boxRight && grid2[dy-1][bx+1] == empty && moveObject2(bx, dy, direction, false)) || (grid2[dy-1][bx+1] == left && grid2[dy-1][bx] == empty && moveObject2(bx, dy, direction, false)) {
-				grid2[dy][bx] = empty
-				grid2[dy][bx+1] = empty
-				grid2[dy-1][bx] = boxLeft
-				grid2[dy-1][bx+1] = boxRight
-			} else {
-				return false
-			}
-		case right:
-			if grid2[dy][bx+2] == empty || (grid2[dy][bx+2] == boxLeft && moveObject2(bx+1, dy, direction, false)) {
-				grid2[dy][bx] = empty
-				grid2[dy][bx+1] = boxLeft
-				grid2[dy][bx+2] = boxRight
-			} else {
-				return false
-			}
-		case down:
-			if (grid2[dy+1][bx] == empty && grid2[dy+1][bx+1] == empty) || (grid2[dy+1][bx] == boxLeft && moveObject2(bx, dy, direction, false)) || (grid2[dy+1][bx] == boxRight && grid2[dy+1][bx+1] == boxLeft && can2BoxesMove(bx-2, dy+1, direction) && moveObject2(bx, dy, direction, false) && moveObject2(bx+1, dy, direction, false)) || (grid2[dy+1][bx] == boxRight && moveObject2(bx, dy, direction, false) && grid2[dy+1][bx+1] == empty) {
-				grid2[dy][bx] = empty
-				grid2[dy][bx+1] = empty
-				grid2[dy+1][bx] = boxLeft
-				grid2[dy+1][bx+1] = boxRight
-			} else {
-				return false
-			}
-		case left:
-			if grid2[dy][bx-1] == empty || (grid2[dy][bx-1] == boxRight && moveObject2(bx-1, dy, direction, false)) {
-				grid2[dy][bx+1] = empty
-				grid2[dy][bx] = boxRight
-				grid2[dy][bx-1] = boxLeft
-			} else {
+	if direction == up || direction == down {
+		if grid2[dy][dx+1] == boundry {
+			return false
+		}
+		if grid2[dy][dx] == boxLeft || grid2[dy][dx] == boxRight {
+			if !canBoxMove(dx, dy, direction) {
 				return false
 			}
 		}
-	}
-
-	// All is well, move the object
-	if isRobot {
-		grid2[dy][dx] = grid2[y][x]
-		grid2[y][x] = empty
-
-		robot2.X = dx
-		robot2.Y = dy
+		if grid2[dy][dx+1] == boxLeft {
+			if !canBoxMove(dx+1, dy, direction) {
+				return false
+			}
+		}
+	} else if direction == left {
+		if grid2[dy][dx] == boxRight {
+			return canBoxMove(dx-1, dy, direction)
+		}
+	} else {
+		if grid2[dy][dx+1] == boundry {
+			return false
+		}
+		if grid2[dy][dx+1] == boxLeft {
+			return canBoxMove(dx+1, dy, direction)
+		}
 	}
 
 	return true
 }
 
-func can2BoxesMove(x, y int, direction byte) bool {
-	if direction == down {
-		y += 2
-	} else {
-		y -= 2
+func moveBox(x, y int, direction byte) {
+	// Always asume the left of the box
+	if grid2[y][x] == boxRight {
+		x--
 	}
 
-	if y < 0 || y > len(grid)-1 || x > len(grid2[y])-4 {
-		return true
-	}
+	dx := x + moves[direction].X
+	dy := y + moves[direction].Y
 
-	// Obstacles in the way?
-	for i := 0; i < 4; i++ {
-		if grid2[y][x+i] == boundry {
-			return false
+	if direction == right {
+		if grid2[dy][dx+1] == boxLeft {
+			moveBox(dx+1, dy, direction)
 		}
-
+	} else if grid2[dy][dx] == boxLeft || grid2[dy][dx] == boxRight {
+		moveBox(dx, dy, direction)
 	}
 
-	// One+ box blocking?
-	if x > len(grid2[y])-5 {
-		for i := -1; i < 5; i++ {
-			if grid[y][x+i] == boxLeft && grid[y][x+i+1] == boxRight && !moveObject2(x+i, y, direction, false) {
-				return false
-			}
+	if direction == up || direction == down {
+		if grid2[dy][dx+1] == boxLeft || grid2[dy][dx+1] == boxRight {
+			moveBox(dx+1, dy, direction)
 		}
 	}
 
-	return true
+	grid2[y][x] = empty
+	grid2[y][x+1] = empty
+	grid2[dy][dx] = boxLeft
+	grid2[dy][dx+1] = boxRight
 }
