@@ -9,10 +9,9 @@ import (
 )
 
 const (
-	bounds  = '#'
-	empty   = '.'
-	visited = '@'
-	finish  = 'E'
+	bounds = '#'
+	empty  = '.'
+	finish = 'E'
 )
 
 var directions = map[byte]position{
@@ -24,16 +23,21 @@ var directions = map[byte]position{
 
 var grid [][]byte
 var player path
+var visited [][]int
 
 func main() {
 	file := util.FileFromArgs()
 	scan := bufio.NewScanner(file)
 	for scan.Scan() {
+		visited = append(visited, make([]int, len(scan.Bytes())))
 		x := bytes.IndexRune(scan.Bytes(), 'S')
 		if x > -1 {
 			player.X = x
 			player.Y = len(grid)
 			player.Direction = 'E'
+			player.History = []position{
+				{player.X, player.Y},
+			}
 		}
 
 		gridRow := make([]byte, len(scan.Bytes()))
@@ -46,56 +50,98 @@ func main() {
 	}
 	heap.Init(paths)
 
+	var finishes []path
 	var p path
 	for {
+		// All shortest paths are found, stop searching!
 		if paths.Len() == 0 {
-			util.PrintMatrix(grid)
-			fmt.Println(finish)
-			panic("No path found...")
+			break
 		}
 
 		p = heap.Pop(paths).(path)
 		if grid[p.Y][p.X] == finish {
-			fmt.Println(p.Score)
-			break
+			if len(finishes) == 0 || p.Score == finishes[0].Score {
+				fmt.Println(p.Score)           // Part 1
+				finishes = append(finishes, p) // Part 2: Find all shortest routes
+			}
+			continue
+		}
+
+		// Don't bother paths that are higher than the finish
+		if p.Score > 109516 { // 109516 is the input answer for part 1 ;)
+			continue
 		}
 
 		var dx, dy int
+	outer:
 		for d, dd := range directions {
 			dx, dy = p.X+dd.X, p.Y+dd.Y
-			if grid[dy][dx] == bounds || grid[dy][dx] == visited {
+			if grid[dy][dx] == bounds {
 				continue
 			}
-			if grid[dy][dx] == empty {
-				grid[dy][dx] = visited
+
+			// Have we been here before?
+			for _, h := range p.History {
+				if h.X == dx && h.Y == dy {
+					continue outer
+				}
 			}
 
-			// Going straight on is free
-			if p.Direction == d {
+			// Have we got enough points to be here?
+			if visited[dy][dx] > 0 && p.Score > visited[dy][dx] {
+				continue
+			}
+			visited[dy][dx] = p.Score
+
+			if p.Direction == d { // Going straight on is free
 				heap.Push(paths, path{
 					X:         dx,
 					Y:         dy,
 					Score:     p.Score + 1,
 					Direction: d,
+					History:   makeHistory(p.History, position{dx, dy}),
 				})
-
-				continue
+			} else { // Turning costs 1000
+				heap.Push(paths, path{
+					X:         dx,
+					Y:         dy,
+					Score:     p.Score + 1001,
+					Direction: d,
+					History:   makeHistory(p.History, position{dx, dy}),
+				})
 			}
-
-			// No going backsies
-			if directions[p.Direction].X+dd.X == 0 && directions[p.Direction].Y+dd.Y == 0 {
-				continue
-			}
-
-			// Turn here
-			heap.Push(paths, path{
-				X:         dx,
-				Y:         dy,
-				Score:     p.Score + 1001,
-				Direction: d,
-			})
 		}
 	}
+
+	fmt.Println(finishes)
+
+	// Part 2: now find unique points
+	var count int
+
+	for _, f := range finishes {
+		for _, fh := range f.History {
+			if grid[fh.Y][fh.X] != 'O' {
+				count++
+				grid[fh.Y][fh.X] = 'O'
+			}
+		}
+	}
+
+	util.PrintMatrix(grid)
+	fmt.Println(count)
+}
+
+// makeHistory creates a brand new slice containing elements from h and p
+func makeHistory(h []position, p position) []position {
+	newSlice := make([]position, len(h)+1)
+
+	var i int
+	for i = range h {
+		newSlice[i] = position{h[i].X, h[i].Y}
+	}
+	newSlice[i+1] = p
+
+	return newSlice
 }
 
 type position struct {
@@ -106,6 +152,7 @@ type path struct {
 	X, Y      int
 	Score     int
 	Direction byte
+	History   []position
 }
 
 type pathHeap []path
