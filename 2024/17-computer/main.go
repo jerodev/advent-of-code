@@ -38,7 +38,7 @@ func main() {
 
 	// Part 2: Find the correct value for A
 part2:
-	for i := 0; ; i++ {
+	for i := util.IntPow(8, len(instructions)-1); ; i++ {
 		A, B, C, pc = i, ogB, ogC, 0
 		output = []int{}
 
@@ -57,10 +57,6 @@ part2:
 
 			fmt.Println(i)
 			break
-		}
-
-		if i%1e7 == 0 {
-			fmt.Println(i / 1e7)
 		}
 	}
 }
