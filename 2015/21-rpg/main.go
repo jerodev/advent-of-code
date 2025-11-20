@@ -27,7 +27,6 @@ var shop [][]item = [][]item{
 		{102, 0, 5}, // Platemail
 	},
 	{ // 0..2
-		{0, 0, 0},   // Placeholder for no rings
 		{20, 0, 1},  // Defense +1
 		{25, 1, 0},  // Damage +1
 		{40, 0, 2},  // Defense +2
@@ -38,7 +37,7 @@ var shop [][]item = [][]item{
 }
 
 func main() {
-	coins := math.MaxInt
+	minCoins, maxCoins := math.MaxInt, 0
 	var dmg, def, cost int
 	var admg, adef, acost int
 	var rdmg, rdef, rcost, rings int
@@ -69,7 +68,7 @@ func main() {
 				rings = 0
 
 				for ri := range shop[2] {
-					if r&ri == ri {
+					if r>>ri&1 == 1 {
 						rdmg += shop[2][ri].damage
 						rdef += shop[2][ri].armor
 						rcost += shop[2][ri].cost
@@ -80,17 +79,17 @@ func main() {
 					}
 				}
 
-				if rcost < coins && battle(rdmg, rdef) {
-					fmt.Println("Winner! -", rcost)
-					if rcost < coins {
-						coins = rcost
-					}
+				if battle(rdmg, rdef) {
+					minCoins = min(rcost, minCoins)
+				} else {
+					maxCoins = max(rcost, maxCoins)
 				}
 			}
 		}
 	}
 
-	fmt.Println(coins)
+	fmt.Println(minCoins)
+	fmt.Println(maxCoins)
 }
 
 type item struct {
