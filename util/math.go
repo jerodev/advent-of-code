@@ -10,6 +10,13 @@ func Abs[I constraints.Integer](v I) I {
 	return v
 }
 
+func FloorDiv(a, b int) int {
+	if a >= 0 {
+		return a / b
+	}
+	return (a - b + 1) / b
+}
+
 func IntLength[I constraints.Integer](v I) int {
 	var x I = 10
 	count := 1
