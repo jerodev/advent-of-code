@@ -1,6 +1,10 @@
 package util
 
-import "golang.org/x/exp/constraints"
+import (
+	"math"
+
+	"golang.org/x/exp/constraints"
+)
 
 func Abs[I constraints.Integer](v I) I {
 	if v < 0 {
@@ -44,4 +48,9 @@ func IntPow[I constraints.Integer](n, m I) I {
 		result *= n
 	}
 	return result
+}
+
+// NthDigit returns the nth digit of a number starting from the right
+func NthDigit(v, i int) int {
+	return int(math.Floor(float64(v)/math.Pow(10, float64(i)-1))) % 10
 }
