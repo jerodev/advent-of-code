@@ -32,10 +32,14 @@ func StringToInts(s, delimiter string) []int {
 	}
 
 	parts := strings.Split(strings.TrimSpace(s), delimiter)
-	ints := make([]int, len(parts))
+	ints := make([]int, 0, len(parts))
 
-	for i, part := range parts {
-		ints[i], _ = strconv.Atoi(part)
+	for _, part := range parts {
+		if part == "" {
+			continue
+		}
+
+		ints = append(ints, MustAtoi(part))
 	}
 
 	return ints
