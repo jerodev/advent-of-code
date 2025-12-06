@@ -7,3 +7,4 @@ My attempts at solving the [Advent of Code](https://adventofcode.com/) puzzles, 
 | 2022 | [Rust](https://www.rust-lang.org/) |
 | 2023 | [Go](https://go.dev/)              |
 | 2024 | [Go](https://go.dev/)              |
+| 2025 | [Go](https://go.dev/)              |
